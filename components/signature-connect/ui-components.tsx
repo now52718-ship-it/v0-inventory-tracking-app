@@ -72,7 +72,7 @@ export function Pill({
     <button 
       onClick={onClick} 
       className={cn(
-        "px-4 py-2 rounded-full border-none cursor-pointer text-[13px] whitespace-nowrap transition-colors",
+        "px-4 py-2 rounded-full border-none cursor-pointer text-[13px] whitespace-nowrap transition-all active:scale-95",
         active 
           ? "bg-primary text-primary-foreground font-bold" 
           : "bg-secondary text-muted-foreground font-normal hover:bg-secondary/80"
@@ -100,7 +100,7 @@ export function NavButton({
     <button 
       onClick={onClick} 
       className={cn(
-        "flex-1 bg-transparent border-none cursor-pointer flex flex-col items-center gap-1 py-2 transition-colors",
+        "flex-1 bg-transparent border-none cursor-pointer flex flex-col items-center gap-1 py-2 transition-all active:scale-95",
         active 
           ? "text-primary" 
           : light 
@@ -147,7 +147,7 @@ export function SelectField({
 
 export function Toast({ message }: { message: string }) {
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-card text-foreground px-6 py-3 rounded-full text-sm font-semibold z-50 whitespace-nowrap border border-border shadow-lg">
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-card text-foreground px-6 py-3 rounded-full text-sm font-semibold z-50 whitespace-nowrap shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
       {message}
     </div>
   )

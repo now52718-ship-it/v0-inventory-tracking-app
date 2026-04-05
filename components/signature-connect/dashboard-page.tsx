@@ -43,7 +43,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           </div>
           <button 
             onClick={() => onNavigate('stock')}
-            className="w-9 h-9 rounded-full bg-primary border-none flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity text-[22px] font-bold text-primary-foreground leading-none"
+            className="w-9 h-9 rounded-full bg-primary border-none flex items-center justify-center cursor-pointer active:scale-95 transition-transform text-[22px] font-bold text-primary-foreground leading-none"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -51,7 +51,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
         {/* Stock Overview Card with Diagonal Stripes */}
         <div 
-          className="rounded-[22px] p-5 mb-3.5 overflow-hidden border border-border"
+          className="rounded-[22px] p-5 mb-3.5 overflow-hidden"
           style={{
             background: `repeating-linear-gradient(135deg, #1C1C1C 0px, #1C1C1C 14px, #212121 14px, #212121 28px)`
           }}
@@ -87,7 +87,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex gap-2 mb-3.5 overflow-x-auto pb-0.5">
+        <div className="flex gap-2 mb-3.5 overflow-x-auto">
           {['All', 'In Field', 'Returned', 'Received'].map((f) => (
             <Pill key={f} label={f} active={filter === f} onClick={() => setFilter(f)} />
           ))}
@@ -104,7 +104,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <div 
               key={activity.id}
               onClick={() => onNavigate('products')}
-              className="bg-card rounded-2xl p-3 px-3.5 flex items-center gap-3 cursor-pointer border border-border hover:bg-secondary transition-colors"
+              className="bg-card rounded-2xl p-3 px-3.5 flex items-center gap-3 cursor-pointer hover:bg-secondary active:scale-[0.99] transition-all"
             >
               <Avatar 
                 name={activity.product} 

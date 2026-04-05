@@ -30,7 +30,7 @@ export function ProductsPage({ onSelectProduct, onNavigate }: ProductsPageProps)
         <div className="text-[22px] font-extrabold text-foreground mb-3">Products</div>
         
         {/* Search */}
-        <div className="bg-card rounded-xl px-3 mb-3.5 flex items-center border border-border">
+        <div className="bg-card rounded-xl px-3 mb-3.5 flex items-center">
           <Search className="w-4 h-4 text-muted-foreground" />
           <input 
             placeholder="Search products…" 
@@ -58,7 +58,7 @@ export function ProductsPage({ onSelectProduct, onNavigate }: ProductsPageProps)
                     onSelectProduct(product)
                     onNavigate('detail')
                   }}
-                  className="bg-card rounded-2xl p-3 px-3.5 flex items-center gap-3 cursor-pointer border border-border hover:bg-secondary transition-colors"
+                  className="bg-card rounded-2xl p-3 px-3.5 flex items-center gap-3 cursor-pointer hover:bg-secondary active:scale-[0.99] transition-all"
                 >
                   <Avatar 
                     name={product.name} 
