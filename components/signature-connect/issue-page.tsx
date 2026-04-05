@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { type Product, STAFF, CATEGORIES } from '@/lib/constants'
-import { FormLabel, SelectField, Avatar } from './ui-components'
-import { ArrowLeft, Minus, Plus } from 'lucide-react'
+import { Avatar } from './ui-components'
+import { ArrowLeft } from 'lucide-react'
 
 interface IssuePageProps {
   product: Product
@@ -12,39 +12,47 @@ interface IssuePageProps {
   onToast: (message: string) => void
 }
 
+function FormLabel({ text }: { text: string }) {
+  return <div className="text-xs text-[#888] mb-1.5 mt-3.5">{text}</div>
+}
+
+function SelectField({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full p-3 px-3.5 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-[#111] appearance-none"
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  )
+}
+
 export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageProps) {
-  const [staff, setStaff] = useState('')
-  const [category, setCategory] = useState('')
-  const [serial, setSerial] = useState('')
+  const [category, setCategory] = useState(CATEGORIES[0])
   const [quantity, setQuantity] = useState(1)
-  const [notes, setNotes] = useState('')
+  const [issuedTo, setIssuedTo] = useState(STAFF[2])
+  const [authorizedBy, setAuthorizedBy] = useState(STAFF[0])
+  const [customer, setCustomer] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
-    if (!staff || !category) {
-      onToast('Please fill in required fields')
-      return
-    }
-    
-    if (quantity > product.stock) {
-      onToast('Not enough stock available')
-      return
-    }
-
     setLoading(true)
     try {
       await onSubmit('issue', {
         productId: product.id,
         productName: product.name,
-        staff,
         category,
-        serial,
         quantity,
-        notes,
+        issuedTo,
+        authorizedBy,
+        customer,
         timestamp: new Date().toISOString()
       })
-      onToast('Item issued successfully')
-      onNavigate('products')
+      onToast('Item issued - Sheets updated!')
+      onNavigate('dashboard')
     } catch {
       onToast('Failed to issue item')
     } finally {
@@ -53,98 +61,72 @@ export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageP
   }
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-[#F4F4F4]">
+    <div className="flex-1 overflow-y-auto bg-[#F4F4F4] flex flex-col">
       {/* Header */}
-      <div className="p-5 pb-0">
+      <div className="p-3 px-5 flex items-center bg-[#F4F4F4] shrink-0">
         <button 
           onClick={() => onNavigate('detail')}
-          className="flex items-center gap-2 text-foreground bg-transparent border-none cursor-pointer mb-4 hover:opacity-70 transition-opacity"
+          className="bg-transparent border-none cursor-pointer text-2xl text-[#111] p-1 leading-none"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Back</span>
+          <ArrowLeft className="w-6 h-6" />
         </button>
-        <div className="text-2xl font-extrabold text-foreground mb-1">Issue Item</div>
-        <div className="text-sm text-muted-foreground">Fill in the details to issue this item</div>
+        <div className="flex-1 text-center text-base font-bold text-[#111]">Issue Item</div>
+        <div className="w-7" />
       </div>
 
       {/* Product Summary */}
-      <div className="mx-5 mt-4 bg-white rounded-2xl p-4 flex items-center gap-3">
-        <Avatar name={product.name} size={44} className="bg-[#F4F4F4] text-primary" />
-        <div className="flex-1">
-          <div className="font-semibold text-foreground">{product.name}</div>
-          <div className="text-xs text-muted-foreground">Available: {product.stock} units</div>
+      <div className="mx-5 mb-0.5 bg-white rounded-[14px] p-3 px-3.5 border border-[#EBEBEB] flex items-center gap-2.5 shrink-0">
+        <Avatar name={product.name} size={40} />
+        <div>
+          <div className="text-sm font-bold text-[#111]">{product.name}</div>
+          <div className="text-[11px] text-[#888]">{product.serials[0] || 'No serial'}</div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
-        <div className="bg-white rounded-2xl p-4">
-          <FormLabel text="Staff Member *" />
-          <SelectField 
-            value={staff} 
-            onChange={setStaff} 
-            options={STAFF}
-            placeholder="Select staff member"
-          />
+      <div className="px-5 flex-1">
+        <FormLabel text="Category *" />
+        <SelectField value={category} onChange={setCategory} options={CATEGORIES} />
 
-          <FormLabel text="Category *" />
-          <SelectField 
-            value={category} 
-            onChange={setCategory} 
-            options={CATEGORIES}
-            placeholder="Select category"
-          />
-
-          {product.serials.length > 0 && (
-            <>
-              <FormLabel text="Serial Number" />
-              <SelectField 
-                value={serial} 
-                onChange={setSerial} 
-                options={product.serials}
-                placeholder="Select serial (optional)"
-              />
-            </>
-          )}
-
-          <FormLabel text="Quantity" />
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-12 h-12 rounded-xl border-2 border-border bg-white flex items-center justify-center cursor-pointer hover:bg-[#F4F4F4] transition-colors"
-            >
-              <Minus className="w-5 h-5 text-foreground" />
-            </button>
-            <span className="text-2xl font-extrabold text-foreground min-w-[60px] text-center">
-              {quantity}
-            </span>
-            <button 
-              onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-              className="w-12 h-12 rounded-xl border-2 border-border bg-white flex items-center justify-center cursor-pointer hover:bg-[#F4F4F4] transition-colors"
-            >
-              <Plus className="w-5 h-5 text-foreground" />
-            </button>
+        <FormLabel text="Quantity *" />
+        <div className="flex gap-2.5 items-center mt-1">
+          <button 
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="w-11 h-11 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-[22px] cursor-pointer text-[#111] font-bold"
+          >
+            −
+          </button>
+          <div className="flex-1 text-center text-[26px] font-extrabold text-[#111]">
+            {quantity}
           </div>
-
-          <FormLabel text="Notes" />
-          <textarea 
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add any additional notes..."
-            rows={3}
-            className="w-full p-3 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-foreground resize-none placeholder:text-muted-foreground"
-          />
+          <button 
+            onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+            className="w-11 h-11 rounded-xl border-none bg-primary text-[22px] cursor-pointer text-primary-foreground font-bold"
+          >
+            +
+          </button>
         </div>
-      </div>
 
-      {/* Submit Button */}
-      <div className="p-5 pt-0">
+        <FormLabel text="Issued To *" />
+        <SelectField value={issuedTo} onChange={setIssuedTo} options={STAFF} />
+
+        <FormLabel text="Authorized By *" />
+        <SelectField value={authorizedBy} onChange={setAuthorizedBy} options={STAFF} />
+
+        <FormLabel text="Customer Name (optional)" />
+        <input 
+          value={customer}
+          onChange={(e) => setCustomer(e.target.value)}
+          placeholder="e.g. John Doe"
+          className="w-full p-3 px-3.5 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-[#111] box-border placeholder:text-[#9A9A9A]"
+        />
+
         <button 
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-4 rounded-2xl border-none font-bold text-base cursor-pointer bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
+          className="w-full py-4 rounded-2xl border-none bg-primary text-primary-foreground font-extrabold text-base cursor-pointer mt-5 mb-4 disabled:opacity-50 hover:opacity-90 transition-opacity"
         >
-          {loading ? 'Processing...' : 'Confirm Issue'}
+          {loading ? 'Processing...' : 'Submit → Log to Sheets'}
         </button>
       </div>
     </div>

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { type Product, STAFF, CONDITIONS } from '@/lib/constants'
-import { FormLabel, SelectField, Avatar } from './ui-components'
-import { ArrowLeft, Minus, Plus } from 'lucide-react'
+import { Avatar } from './ui-components'
+import { ArrowLeft } from 'lucide-react'
 
 interface ReturnPageProps {
   product: Product
@@ -12,34 +12,45 @@ interface ReturnPageProps {
   onToast: (message: string) => void
 }
 
+function FormLabel({ text }: { text: string }) {
+  return <div className="text-xs text-[#888] mb-1.5 mt-3.5">{text}</div>
+}
+
+function SelectField({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full p-3 px-3.5 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-[#111] appearance-none"
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  )
+}
+
 export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPageProps) {
-  const [staff, setStaff] = useState('')
-  const [condition, setCondition] = useState('')
-  const [serial, setSerial] = useState('')
-  const [quantity, setQuantity] = useState(1)
-  const [notes, setNotes] = useState('')
+  const [returnedBy, setReturnedBy] = useState(STAFF[2])
+  const [receivedBy, setReceivedBy] = useState(STAFF[0])
+  const [condition, setCondition] = useState(CONDITIONS[0])
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async () => {
-    if (!staff || !condition) {
-      onToast('Please fill in required fields')
-      return
-    }
+  const isBadCondition = ['Faulty', 'Damaged'].includes(condition)
 
+  const handleSubmit = async () => {
     setLoading(true)
     try {
       await onSubmit('return', {
         productId: product.id,
         productName: product.name,
-        staff,
+        returnedBy,
+        receivedBy,
         condition,
-        serial,
-        quantity,
-        notes,
         timestamp: new Date().toISOString()
       })
-      onToast('Item returned successfully')
-      onNavigate('products')
+      onToast('Return logged - Sheets updated!')
+      onNavigate('dashboard')
     } catch {
       onToast('Failed to return item')
     } finally {
@@ -48,98 +59,71 @@ export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPag
   }
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-[#F4F4F4]">
+    <div className="flex-1 overflow-y-auto bg-[#F4F4F4] flex flex-col">
       {/* Header */}
-      <div className="p-5 pb-0">
+      <div className="p-3 px-5 flex items-center bg-[#F4F4F4] shrink-0">
         <button 
           onClick={() => onNavigate('detail')}
-          className="flex items-center gap-2 text-foreground bg-transparent border-none cursor-pointer mb-4 hover:opacity-70 transition-opacity"
+          className="bg-transparent border-none cursor-pointer text-2xl text-[#111] p-1 leading-none"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Back</span>
+          <ArrowLeft className="w-6 h-6" />
         </button>
-        <div className="text-2xl font-extrabold text-foreground mb-1">Return Item</div>
-        <div className="text-sm text-muted-foreground">Fill in the details to return this item</div>
+        <div className="flex-1 text-center text-base font-bold text-[#111]">Return Item</div>
+        <div className="w-7" />
       </div>
 
       {/* Product Summary */}
-      <div className="mx-5 mt-4 bg-white rounded-2xl p-4 flex items-center gap-3">
-        <Avatar name={product.name} size={44} className="bg-[#F4F4F4] text-primary" />
-        <div className="flex-1">
-          <div className="font-semibold text-foreground">{product.name}</div>
-          <div className="text-xs text-muted-foreground">{product.cat}</div>
+      <div className="mx-5 mb-0.5 bg-white rounded-[14px] p-3 px-3.5 border border-[#EBEBEB] flex items-center gap-2.5 shrink-0">
+        <Avatar name={product.name} size={40} />
+        <div>
+          <div className="text-sm font-bold text-[#111]">{product.name}</div>
+          <div className="text-[11px] text-[#888]">{product.serials[0] || 'No serial'}</div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
-        <div className="bg-white rounded-2xl p-4">
-          <FormLabel text="Returned By *" />
-          <SelectField 
-            value={staff} 
-            onChange={setStaff} 
-            options={STAFF}
-            placeholder="Select staff member"
-          />
+      <div className="px-5 flex-1">
+        <FormLabel text="Returned By *" />
+        <SelectField value={returnedBy} onChange={setReturnedBy} options={STAFF} />
 
-          <FormLabel text="Item Condition *" />
-          <SelectField 
-            value={condition} 
-            onChange={setCondition} 
-            options={CONDITIONS}
-            placeholder="Select condition"
-          />
+        <FormLabel text="Received By *" />
+        <SelectField value={receivedBy} onChange={setReceivedBy} options={STAFF} />
 
-          {product.serials.length > 0 && (
-            <>
-              <FormLabel text="Serial Number" />
-              <SelectField 
-                value={serial} 
-                onChange={setSerial} 
-                options={product.serials}
-                placeholder="Select serial (optional)"
-              />
-            </>
-          )}
-
-          <FormLabel text="Quantity" />
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-12 h-12 rounded-xl border-2 border-border bg-white flex items-center justify-center cursor-pointer hover:bg-[#F4F4F4] transition-colors"
+        <FormLabel text="Condition *" />
+        <div className="flex flex-wrap gap-2 mt-1">
+          {CONDITIONS.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCondition(c)}
+              className="px-3.5 py-2 rounded-full text-xs cursor-pointer transition-colors"
+              style={{
+                border: condition === c ? '2px solid #AAEF35' : '1.5px solid #E0E0E0',
+                background: condition === c ? 'rgba(170, 239, 53, 0.13)' : '#fff',
+                color: condition === c ? '#1A2C00' : '#555',
+                fontWeight: condition === c ? 700 : 400
+              }}
             >
-              <Minus className="w-5 h-5 text-foreground" />
+              {c}
             </button>
-            <span className="text-2xl font-extrabold text-foreground min-w-[60px] text-center">
-              {quantity}
-            </span>
-            <button 
-              onClick={() => setQuantity(quantity + 1)}
-              className="w-12 h-12 rounded-xl border-2 border-border bg-white flex items-center justify-center cursor-pointer hover:bg-[#F4F4F4] transition-colors"
-            >
-              <Plus className="w-5 h-5 text-foreground" />
-            </button>
-          </div>
-
-          <FormLabel text="Notes" />
-          <textarea 
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add any additional notes..."
-            rows={3}
-            className="w-full p-3 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-foreground resize-none placeholder:text-muted-foreground"
-          />
+          ))}
         </div>
-      </div>
 
-      {/* Submit Button */}
-      <div className="p-5 pt-0">
+        {/* Faulty/Damaged Warning */}
+        {isBadCondition && (
+          <div className="bg-[#FFF8E1] rounded-xl p-3 px-3.5 mt-3 border border-[#FFD54F]">
+            <div className="text-[13px] font-bold text-[#E65100]">Faulty / Damaged</div>
+            <div className="text-xs text-[#BF360C] mt-0.5 leading-relaxed">
+              Admin will be prompted to update the Faulty Units column in Google Sheets.
+            </div>
+          </div>
+        )}
+
         <button 
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-4 rounded-2xl border-none font-bold text-base cursor-pointer bg-[#5AC8FA] text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
+          className="w-full py-4 rounded-2xl border-none bg-primary text-primary-foreground font-extrabold text-base cursor-pointer mt-5 mb-4 disabled:opacity-50 hover:opacity-90 transition-opacity"
         >
-          {loading ? 'Processing...' : 'Confirm Return'}
+          {loading ? 'Processing...' : 'Submit → Log to Sheets'}
         </button>
       </div>
     </div>

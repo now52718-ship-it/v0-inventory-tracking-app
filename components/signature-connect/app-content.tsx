@@ -79,7 +79,7 @@ export function AppContent() {
       case 'products':
         return <ProductsPage onSelectProduct={handleSelectProduct} onNavigate={handleNavigate} />
       case 'detail':
-        return <DetailPage product={selectedProduct} onNavigate={handleNavigate} onAction={handleAction} />
+        return <DetailPage product={selectedProduct} onNavigate={handleNavigate} onAction={handleAction} onToast={showToast} />
       case 'issue':
         return <IssuePage product={selectedProduct} onNavigate={handleNavigate} onSubmit={handleSubmit} onToast={showToast} />
       case 'return':

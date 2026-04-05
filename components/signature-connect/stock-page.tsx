@@ -1,14 +1,33 @@
 "use client"
 
 import { useState } from 'react'
-import { PRODUCTS, PRODUCT_CATEGORIES, CONDITIONS, type Product } from '@/lib/constants'
-import { FormLabel, SelectField, Avatar } from './ui-components'
-import { ArrowLeft, Minus, Plus } from 'lucide-react'
+import { PRODUCTS, CONDITIONS, type Product } from '@/lib/constants'
+import { Avatar } from './ui-components'
+import { ArrowLeft } from 'lucide-react'
 
 interface StockPageProps {
   onNavigate: (page: string) => void
   onSubmit: (type: string, data: Record<string, unknown>) => Promise<void>
   onToast: (message: string) => void
+}
+
+function FormLabel({ text }: { text: string }) {
+  return <div className="text-xs text-[#888] mb-1.5 mt-3.5">{text}</div>
+}
+
+function SelectField({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full p-3 px-3.5 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-[#111] appearance-none"
+    >
+      {placeholder && <option value="">{placeholder}</option>}
+      {options.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  )
 }
 
 export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
@@ -17,7 +36,6 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
   const [quantity, setQuantity] = useState(1)
   const [serialNumber, setSerialNumber] = useState('')
   const [supplier, setSupplier] = useState('')
-  const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
@@ -35,10 +53,9 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
         quantity,
         serialNumber,
         supplier,
-        notes,
         timestamp: new Date().toISOString()
       })
-      onToast('Stock added successfully')
+      onToast('Stock added - Sheets updated!')
       onNavigate('dashboard')
     } catch {
       onToast('Failed to add stock')
@@ -48,18 +65,17 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
   }
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-[#F4F4F4]">
+    <div className="flex-1 overflow-y-auto bg-[#F4F4F4] flex flex-col">
       {/* Header */}
-      <div className="p-5 pb-0">
+      <div className="p-3 px-5 flex items-center bg-[#F4F4F4] shrink-0">
         <button 
           onClick={() => onNavigate('dashboard')}
-          className="flex items-center gap-2 text-foreground bg-transparent border-none cursor-pointer mb-4 hover:opacity-70 transition-opacity"
+          className="bg-transparent border-none cursor-pointer text-2xl text-[#111] p-1 leading-none"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Back</span>
+          <ArrowLeft className="w-6 h-6" />
         </button>
-        <div className="text-2xl font-extrabold text-foreground mb-1">Add Stock</div>
-        <div className="text-sm text-muted-foreground">Add new inventory to the system</div>
+        <div className="flex-1 text-center text-base font-bold text-[#111]">Add Stock</div>
+        <div className="w-7" />
       </div>
 
       {/* Form */}
@@ -95,21 +111,21 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
           />
 
           <FormLabel text="Quantity" />
-          <div className="flex items-center gap-4">
+          <div className="flex gap-2.5 items-center mt-1">
             <button 
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-12 h-12 rounded-xl border-2 border-border bg-white flex items-center justify-center cursor-pointer hover:bg-[#F4F4F4] transition-colors"
+              className="w-11 h-11 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-[22px] cursor-pointer text-[#111] font-bold"
             >
-              <Minus className="w-5 h-5 text-foreground" />
+              −
             </button>
-            <span className="text-2xl font-extrabold text-foreground min-w-[60px] text-center">
+            <div className="flex-1 text-center text-[26px] font-extrabold text-[#111]">
               {quantity}
-            </span>
+            </div>
             <button 
               onClick={() => setQuantity(quantity + 1)}
-              className="w-12 h-12 rounded-xl border-2 border-border bg-white flex items-center justify-center cursor-pointer hover:bg-[#F4F4F4] transition-colors"
+              className="w-11 h-11 rounded-xl border-none bg-primary text-[22px] cursor-pointer text-primary-foreground font-bold"
             >
-              <Plus className="w-5 h-5 text-foreground" />
+              +
             </button>
           </div>
 
@@ -119,7 +135,7 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
             value={serialNumber}
             onChange={(e) => setSerialNumber(e.target.value)}
             placeholder="Enter serial number"
-            className="w-full p-3 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-foreground placeholder:text-muted-foreground"
+            className="w-full p-3 px-3.5 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-[#111] placeholder:text-[#9A9A9A]"
           />
 
           <FormLabel text="Supplier" />
@@ -128,16 +144,7 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
             value={supplier}
             onChange={(e) => setSupplier(e.target.value)}
             placeholder="Enter supplier name"
-            className="w-full p-3 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-foreground placeholder:text-muted-foreground"
-          />
-
-          <FormLabel text="Notes" />
-          <textarea 
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add any additional notes..."
-            rows={3}
-            className="w-full p-3 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-foreground resize-none placeholder:text-muted-foreground"
+            className="w-full p-3 px-3.5 rounded-xl border-[1.5px] border-[#E8E8E8] bg-white text-sm text-[#111] placeholder:text-[#9A9A9A]"
           />
         </div>
       </div>
@@ -147,9 +154,9 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
         <button 
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-4 rounded-2xl border-none font-bold text-base cursor-pointer bg-[#4CD964] text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
+          className="w-full py-4 rounded-2xl border-none font-extrabold text-base cursor-pointer bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
         >
-          {loading ? 'Processing...' : 'Add Stock'}
+          {loading ? 'Processing...' : 'Submit → Log to Sheets'}
         </button>
       </div>
     </div>

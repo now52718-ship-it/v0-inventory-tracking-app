@@ -26,11 +26,13 @@ export function StatusDot({ status }: { status: ProductStatus }) {
 export function Avatar({ 
   name, 
   size = 40, 
-  className 
+  className,
+  style
 }: { 
   name: string
   size?: number
-  className?: string 
+  className?: string
+  style?: React.CSSProperties
 }) {
   const initials = name
     .split(' ')
@@ -48,7 +50,8 @@ export function Avatar({
       style={{ 
         width: size, 
         height: size, 
-        fontSize: size * 0.34 
+        fontSize: size * 0.34,
+        ...style
       }}
     >
       {initials}
@@ -69,7 +72,7 @@ export function Pill({
     <button 
       onClick={onClick} 
       className={cn(
-        "px-4 py-2 rounded-full border-none cursor-pointer text-sm whitespace-nowrap transition-colors",
+        "px-4 py-2 rounded-full border-none cursor-pointer text-[13px] whitespace-nowrap transition-colors",
         active 
           ? "bg-primary text-primary-foreground font-bold" 
           : "bg-secondary text-muted-foreground font-normal hover:bg-secondary/80"
