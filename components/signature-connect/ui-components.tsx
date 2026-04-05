@@ -147,42 +147,8 @@ export function SelectField({
 
 export function Toast({ message }: { message: string }) {
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-background text-foreground px-6 py-3 rounded-full text-sm font-semibold z-50 whitespace-nowrap border border-border shadow-lg">
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-card text-foreground px-6 py-3 rounded-full text-sm font-semibold z-50 whitespace-nowrap border border-border shadow-lg">
       {message}
-    </div>
-  )
-}
-
-export function PhoneFrame({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="bg-[#C8DEEA] min-h-screen p-4 md:p-7 flex justify-center items-start">
-      <div className="w-full max-w-[375px] rounded-[46px] overflow-hidden bg-background shadow-[0_0_0_8px_#111,0_0_0_10px_#3A3A3A,0_28px_70px_rgba(0,0,0,0.45)] flex flex-col h-[760px] relative">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-export function StatusBar({ light }: { light?: boolean }) {
-  return (
-    <div 
-      className={cn(
-        "h-[46px] flex items-center justify-between px-6 shrink-0",
-        light ? "bg-[#F4F4F4]" : "bg-[#0A0A0A]"
-      )}
-    >
-      <span className={cn("text-sm font-bold", light ? "text-foreground" : "text-white")}>
-        9:41
-      </span>
-      <div 
-        className={cn(
-          "w-[110px] h-[22px] rounded-xl bg-[#0A0A0A] absolute left-1/2 -translate-x-1/2",
-          light && "border border-[#DDD]"
-        )} 
-      />
-      <span className={cn("text-xs tracking-[2px]", light ? "text-[#555]" : "text-[#888]")}>
-        ●▲▌
-      </span>
     </div>
   )
 }

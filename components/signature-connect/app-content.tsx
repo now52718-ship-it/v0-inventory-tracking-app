@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { PRODUCTS, type Product } from '@/lib/constants'
-import { PhoneFrame, StatusBar, NavButton, Toast } from './ui-components'
+import { NavButton, Toast } from './ui-components'
 import { LoginPage } from './login-page'
 import { DashboardPage } from './dashboard-page'
 import { ProductsPage } from './products-page'
@@ -54,7 +54,7 @@ export function AppContent() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="bg-[#C8DEEA] min-h-screen flex items-center justify-center">
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="text-4xl font-extrabold text-primary mb-2">SC</div>
           <div className="text-muted-foreground">Loading...</div>
@@ -94,16 +94,9 @@ export function AppContent() {
   }
 
   return (
-    <PhoneFrame>
-      {/* Status bar */}
-      <StatusBar light={isLightScreen} />
-
+    <div className={`min-h-screen w-full flex flex-col ${isLightScreen ? 'bg-[#F4F4F4]' : 'bg-background'}`}>
       {/* Content */}
-      <div 
-        className={`flex-1 overflow-hidden flex flex-col min-h-0 ${
-          isLightScreen ? 'bg-[#F4F4F4]' : 'bg-background'
-        }`}
-      >
+      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
         {getScreenContent()}
       </div>
 
@@ -113,7 +106,7 @@ export function AppContent() {
       {/* Bottom nav */}
       {showNav && (
         <div 
-          className={`h-[68px] flex items-center shrink-0 pb-1 border-t ${
+          className={`h-[68px] flex items-center shrink-0 pb-1 border-t safe-area-bottom ${
             isLightScreen 
               ? 'bg-white border-[#EBEBEB]' 
               : 'bg-card border-border'
@@ -149,6 +142,6 @@ export function AppContent() {
           />
         </div>
       )}
-    </PhoneFrame>
+    </div>
   )
 }

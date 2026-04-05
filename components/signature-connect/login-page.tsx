@@ -30,8 +30,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="bg-[#C8DEEA] min-h-screen p-4 md:p-7 flex justify-center items-center">
-      <div className="w-full max-w-[400px] bg-background rounded-3xl p-8 shadow-[0_0_0_8px_#111,0_0_0_10px_#3A3A3A]">
+    <div className="bg-background min-h-screen w-full p-6 flex justify-center items-center">
+      <div className="w-full max-w-[400px] bg-card rounded-3xl p-8 border border-border">
         <div className="text-center mb-8">
           <div className="text-4xl font-extrabold text-primary mb-2">SC</div>
           <div className="text-lg font-bold text-foreground">Signature Connect</div>
