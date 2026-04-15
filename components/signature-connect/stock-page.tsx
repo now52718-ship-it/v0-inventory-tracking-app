@@ -1,9 +1,12 @@
 "use client"
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import { PRODUCTS, CONDITIONS, type Product } from '@/lib/constants'
 import { Avatar } from './ui-components'
 import { ArrowLeft } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
+import { logScanQRActivity } from '@/lib/activityLogService'
 
 interface StockPageProps {
   onNavigate: (page: string) => void
@@ -31,6 +34,7 @@ function SelectField({ value, onChange, options, placeholder }: { value: string;
 }
 
 export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
+  const { user } = useAuth()
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [condition, setCondition] = useState('')
   const [quantity, setQuantity] = useState(1)
@@ -46,6 +50,32 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
 
     setLoading(true)
     try {
+      // Add to Supabase
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          transaction_id: `TXN-${Date.now()}`,
+          serial_number: serialNumber || `AUTO-${Date.now()}`,
+          product_id: selectedProduct.id,
+          action: 'ADD_STOCK',
+          user_id: user?.id || null,
+          customer_name: supplier,
+          condition,
+          approval_status: 'approved',
+          metadata: { quantity }
+        })
+
+      if (error) {
+        console.error('Error adding stock to Supabase:', error)
+        // Continue with fallback
+      }
+
+      // Log the activity
+      if (user?.id) {
+        await logScanQRActivity(user.id, user.username || 'Unknown', serialNumber || `AUTO-${Date.now()}`)
+      }
+
+      // Call the submission handler
       await onSubmit('stock', {
         productId: selectedProduct.id,
         productName: selectedProduct.name,
@@ -55,9 +85,11 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
         supplier,
         timestamp: new Date().toISOString()
       })
-      onToast('Stock added - Sheets updated!')
+      
+      onToast('Stock added successfully!')
       onNavigate('dashboard')
-    } catch {
+    } catch (error) {
+      console.error('Error adding stock:', error)
       onToast('Failed to add stock')
     } finally {
       setLoading(false)

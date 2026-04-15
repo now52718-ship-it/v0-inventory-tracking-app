@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import { type Product, STAFF, CONDITIONS } from '@/lib/constants'
 import { Avatar } from './ui-components'
 import { ArrowLeft } from 'lucide-react'
+import { returnItem } from '@/lib/itemService'
 
 interface ReturnPageProps {
   product: Product
@@ -31,6 +33,7 @@ function SelectField({ value, onChange, options }: { value: string; onChange: (v
 }
 
 export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPageProps) {
+  const { user } = useAuth()
   const [returnedBy, setReturnedBy] = useState(STAFF[2])
   const [receivedBy, setReceivedBy] = useState(STAFF[0])
   const [condition, setCondition] = useState(CONDITIONS[0])
@@ -41,17 +44,33 @@ export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPag
   const handleSubmit = async () => {
     setLoading(true)
     try {
+      // Get serial number from product
+      const serialNumber = product.serials && product.serials.length > 0 
+        ? product.serials[0] 
+        : `SN-${Date.now()}`
+
+      // Return item in Supabase
+      await returnItem(
+        serialNumber,
+        String(product.id),
+        user?.id || '',
+        user?.username || 'Unknown',
+        condition
+      )
+
       await onSubmit('return', {
         productId: product.id,
         productName: product.name,
         returnedBy,
         receivedBy,
         condition,
+        serialNumber,
         timestamp: new Date().toISOString()
       })
-      onToast('Return logged - Sheets updated!')
+      onToast('Return logged successfully!')
       onNavigate('dashboard')
-    } catch {
+    } catch (error) {
+      console.error('Error returning item:', error)
       onToast('Failed to return item')
     } finally {
       setLoading(false)

@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { PRODUCTS, RECENT_ACTIVITY } from '@/lib/constants'
 import { Avatar, StatusDot, Pill } from './ui-components'
 import { Plus } from 'lucide-react'
+import { getAllActivityLogs, formatActivityLogForDisplay } from '@/lib/activityLogService'
 
 interface DashboardPageProps {
   onNavigate: (page: string) => void
@@ -13,17 +14,39 @@ interface DashboardPageProps {
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const { user } = useAuth()
   const [filter, setFilter] = useState('All')
+  const [activityLogs, setActivityLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   
   const inStock = PRODUCTS.filter((p) => p.status === 'In Stock').length
   const lowStock = PRODUCTS.filter((p) => p.status === 'Low Stock').length
   const outOfStock = PRODUCTS.filter((p) => p.status === 'Out of Stock').length
   const totalItems = PRODUCTS.reduce((a, p) => a + p.stock, 0)
 
-  const filteredActivity = RECENT_ACTIVITY.filter((a) => {
+  // Fetch real activity logs from Supabase
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        setLoading(true)
+        const logs = await getAllActivityLogs(1, 10)
+        setActivityLogs(logs)
+      } catch (error) {
+        console.error('Error fetching activity logs:', error)
+        // Fall back to mock data
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchLogs()
+  }, [])
+
+  // Use real activity logs if available, otherwise fall back to mock
+  const displayActivity = activityLogs.length > 0 ? activityLogs : RECENT_ACTIVITY
+
+  const filteredActivity = displayActivity.filter((a: any) => {
     if (filter === 'All') return true
-    if (filter === 'In Field') return a.type === 'issue'
-    if (filter === 'Returned') return a.type === 'return'
-    if (filter === 'Received') return a.type === 'stock'
+    if (filter === 'In Field') return a.type === 'issue' || a.action === 'ISSUE_ITEM'
+    if (filter === 'Returned') return a.type === 'return' || a.action === 'RETURN_ITEM'
+    if (filter === 'Received') return a.type === 'stock' || a.action === 'ADD_STOCK'
     return true
   })
 

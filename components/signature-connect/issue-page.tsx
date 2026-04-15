@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import { type Product, STAFF, CATEGORIES } from '@/lib/constants'
 import { Avatar } from './ui-components'
 import { ArrowLeft } from 'lucide-react'
+import { issueItem } from '@/lib/itemService'
 
 interface IssuePageProps {
   product: Product
@@ -31,6 +33,7 @@ function SelectField({ value, onChange, options }: { value: string; onChange: (v
 }
 
 export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageProps) {
+  const { user } = useAuth()
   const [category, setCategory] = useState(CATEGORIES[0])
   const [quantity, setQuantity] = useState(1)
   const [issuedTo, setIssuedTo] = useState(STAFF[2])
@@ -39,8 +42,27 @@ export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageP
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
+    if (!customer) {
+      onToast('Please enter customer name')
+      return
+    }
+
     setLoading(true)
     try {
+      // Get serial number from product (use first available)
+      const serialNumber = product.serials && product.serials.length > 0 
+        ? product.serials[0] 
+        : `SN-${Date.now()}`
+
+      // Issue item in Supabase
+      await issueItem(
+        serialNumber,
+        String(product.id),
+        user?.id || '',
+        user?.username || 'Unknown',
+        customer
+      )
+
       await onSubmit('issue', {
         productId: product.id,
         productName: product.name,
@@ -49,11 +71,13 @@ export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageP
         issuedTo,
         authorizedBy,
         customer,
+        serialNumber,
         timestamp: new Date().toISOString()
       })
-      onToast('Item issued - Sheets updated!')
+      onToast('Item issued successfully!')
       onNavigate('dashboard')
-    } catch {
+    } catch (error) {
+      console.error('Error issuing item:', error)
       onToast('Failed to issue item')
     } finally {
       setLoading(false)

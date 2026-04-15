@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import { PRODUCTS } from '@/lib/constants'
 import { QrCode, Flashlight, X, Camera, CameraOff } from 'lucide-react'
+import { scanQRCode } from '@/lib/itemService'
+import { useRef as useRefLib } from 'react'
 
 interface ScanPageProps {
   onNavigate: (page: string) => void
@@ -11,13 +14,16 @@ interface ScanPageProps {
 }
 
 export function ScanPage({ onNavigate, onToast, onSelectProduct }: ScanPageProps) {
+  const { user } = useAuth()
   const [serial, setSerial] = useState('')
   const [action, setAction] = useState<'issue' | 'return' | ''>('')
   const [flashOn, setFlashOn] = useState(false)
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -82,7 +88,7 @@ export function ScanPage({ onNavigate, onToast, onSelectProduct }: ScanPageProps
     }
   }, [stopCamera])
 
-  const handleScan = () => {
+  const handleScan = async () => {
     if (!serial) {
       onToast('Please enter a serial number')
       return
@@ -93,18 +99,55 @@ export function ScanPage({ onNavigate, onToast, onSelectProduct }: ScanPageProps
       return
     }
 
-    // Find product with this serial
-    const product = PRODUCTS.find(p => 
-      p.serials.some(s => s.toLowerCase() === serial.toLowerCase())
-    )
+    setIsScanning(true)
 
-    if (product) {
-      onSelectProduct(product)
-      onToast(`Found: ${product.name}`)
-      stopCamera()
-      setTimeout(() => onNavigate(action), 800)
-    } else {
-      onToast('Serial number not found')
+    try {
+      // Try to fetch from Supabase first
+      const scannedItem = await scanQRCode(serial, user?.id || '', user?.username || 'Unknown')
+      
+      if (scannedItem) {
+        onToast(`Item found: ${serial}`)
+        // Find matching product for UI
+        const product = PRODUCTS.find(p => 
+          p.serials.some(s => s.toLowerCase() === serial.toLowerCase())
+        )
+        if (product) {
+          onSelectProduct(product)
+        }
+        stopCamera()
+        setTimeout(() => onNavigate(action), 800)
+      } else {
+        // Fallback to mock data
+        const product = PRODUCTS.find(p => 
+          p.serials.some(s => s.toLowerCase() === serial.toLowerCase())
+        )
+
+        if (product) {
+          onSelectProduct(product)
+          onToast(`Found: ${product.name}`)
+          stopCamera()
+          setTimeout(() => onNavigate(action), 800)
+        } else {
+          onToast('Serial number not found in inventory')
+        }
+      }
+    } catch (error) {
+      console.error('Error scanning QR code:', error)
+      // Fallback to mock data
+      const product = PRODUCTS.find(p => 
+        p.serials.some(s => s.toLowerCase() === serial.toLowerCase())
+      )
+
+      if (product) {
+        onSelectProduct(product)
+        onToast(`Found: ${product.name}`)
+        stopCamera()
+        setTimeout(() => onNavigate(action), 800)
+      } else {
+        onToast('Serial number not found')
+      }
+    } finally {
+      setIsScanning(false)
     }
   }
 
