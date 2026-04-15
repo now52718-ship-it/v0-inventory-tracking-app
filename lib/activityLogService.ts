@@ -28,18 +28,32 @@ interface ActivityLog {
  */
 export async function logLoginActivity(userId: string, userName: string) {
   try {
+    // Make sure we have valid data
+    if (!userName || !userId) {
+      console.warn('Cannot log activity: missing userId or userName');
+      return;
+    }
+
     const { error } = await supabase.from('activity_logs').insert({
-      user_id: userId,
+      user_id: userId || null,
       user_name: userName,
       action: 'LOGIN' as const,
       description: `${userName} logged into the system`,
-    });
+      created_at: new Date().toISOString(),
+    })
 
     if (error) {
-      console.error('Error logging login activity:', error);
+      console.warn('Activity logging skipped (expected during development):', error.message)
     }
   } catch (error) {
-    console.error('Error logging login activity:', error);
+    console.warn('Activity logging unavailable:', error)
+    })
+
+    if (error) {
+      console.warn('Activity logging skipped (expected during development):', error.message)
+    }
+  } catch (error) {
+    console.warn('Activity logging unavailable:', error)
   }
 }
 
