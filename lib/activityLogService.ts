@@ -47,13 +47,6 @@ export async function logLoginActivity(userId: string, userName: string) {
     }
   } catch (error) {
     console.warn('Activity logging unavailable:', error)
-    })
-
-    if (error) {
-      console.warn('Activity logging skipped (expected during development):', error.message)
-    }
-  } catch (error) {
-    console.warn('Activity logging unavailable:', error)
   }
 }
 

@@ -18,6 +18,8 @@ export function LoginPage() {
     // Demo authentication - in production, this would call an API
     if (password === 'admin' || password === 'staff') {
       const userData = {
+        id: `user-${Date.now()}`,
+        name: role === 'admin' ? 'Mr Isaac' : 'Staff User',
         username: role === 'admin' ? 'Mr Isaac' : 'Staff User',
         role,
         token: `demo-token-${Date.now()}`

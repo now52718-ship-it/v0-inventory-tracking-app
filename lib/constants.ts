@@ -25,7 +25,9 @@ export interface Product {
 }
 
 export interface User {
+  id: string
   username: string
+  name: string
   role: 'admin' | 'staff'
   token: string
 }

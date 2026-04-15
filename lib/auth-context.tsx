@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from './constants'
 import { logLoginActivity } from './activityLogService'
+import { supabase } from './supabaseClient'
 
 interface AuthContextType {
   user: User | null
@@ -47,13 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       try {
         // Create activity log for logout
-        const { supabase } = require('./supabaseClient')
         supabase.from('activity_logs').insert({
-          user_id: user.id,
-          user_name: user.name,
+          user_id: user.id || null,
+          user_name: user.name || user.username,
           action: 'LOGOUT',
-          description: `${user.name} logged out of the system`,
-        })
+          description: `${user.name || user.username} logged out of the system`,
+          created_at: new Date().toISOString(),
+        }).catch((error: any) => console.error('Error logging logout activity:', error))
       } catch (error) {
         console.error('Error logging logout activity:', error)
       }
