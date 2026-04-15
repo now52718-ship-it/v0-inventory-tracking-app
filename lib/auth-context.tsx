@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { User } from './constants'
+import { logLoginActivity } from './activityLogService'
 
 interface AuthContextType {
   user: User | null
@@ -28,13 +29,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = (userData: User) => {
+  const login = async (userData: User) => {
     localStorage.setItem('sc_user', JSON.stringify(userData))
     localStorage.setItem('sc_token', userData.token)
     setUser(userData)
+    
+    // Log login activity
+    try {
+      await logLoginActivity(userData.id || '', userData.name || 'Unknown User')
+    } catch (error) {
+      console.error('Error logging login activity:', error)
+    }
   }
 
   const logout = () => {
+    // Log logout activity if user exists
+    if (user) {
+      try {
+        // Create activity log for logout
+        const { supabase } = require('./supabaseClient')
+        supabase.from('activity_logs').insert({
+          user_id: user.id,
+          user_name: user.name,
+          action: 'LOGOUT',
+          description: `${user.name} logged out of the system`,
+        })
+      } catch (error) {
+        console.error('Error logging logout activity:', error)
+      }
+    }
+    
     localStorage.removeItem('sc_user')
     localStorage.removeItem('sc_token')
     setUser(null)

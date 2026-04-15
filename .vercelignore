@@ -1,0 +1,38 @@
+# Git files
+.git
+.gitignore
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+README.md
+
+# Source files that shouldn't be deployed
+.next/cache
+.vercel
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# Build artifacts
+dist
+build
+
+# Testing
+coverage
+.jest
+
+# Database
+SUPABASE_SCHEMA.sql
