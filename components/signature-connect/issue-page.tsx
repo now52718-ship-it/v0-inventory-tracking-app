@@ -54,6 +54,8 @@ export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageP
         ? product.serials[0] 
         : `SN-${Date.now()}`
 
+      console.log('Issuing item:', { serialNumber, productId: product.id, customer })
+
       // Issue item in Supabase
       await issueItem(
         serialNumber,
@@ -62,6 +64,8 @@ export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageP
         user?.username || 'Unknown',
         customer
       )
+
+      console.log('Item issued successfully')
 
       await onSubmit('issue', {
         productId: product.id,
@@ -74,11 +78,11 @@ export function IssuePage({ product, onNavigate, onSubmit, onToast }: IssuePageP
         serialNumber,
         timestamp: new Date().toISOString()
       })
-      onToast('Item issued successfully!')
+      onToast('✅ Item issued successfully!')
       onNavigate('dashboard')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error issuing item:', error)
-      onToast('Failed to issue item')
+      onToast(`Error: ${error?.message || 'Failed to issue item'}`)
     } finally {
       setLoading(false)
     }

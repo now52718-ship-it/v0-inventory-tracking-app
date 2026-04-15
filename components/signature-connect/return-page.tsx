@@ -49,6 +49,8 @@ export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPag
         ? product.serials[0] 
         : `SN-${Date.now()}`
 
+      console.log('Returning item:', { serialNumber, productId: product.id, condition })
+
       // Return item in Supabase
       await returnItem(
         serialNumber,
@@ -57,6 +59,8 @@ export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPag
         user?.username || 'Unknown',
         condition
       )
+
+      console.log('Item returned successfully')
 
       await onSubmit('return', {
         productId: product.id,
@@ -67,11 +71,11 @@ export function ReturnPage({ product, onNavigate, onSubmit, onToast }: ReturnPag
         serialNumber,
         timestamp: new Date().toISOString()
       })
-      onToast('Return logged successfully!')
+      onToast('✅ Return logged successfully!')
       onNavigate('dashboard')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error returning item:', error)
-      onToast('Failed to return item')
+      onToast(`Error: ${error?.message || 'Failed to return item'}`)
     } finally {
       setLoading(false)
     }

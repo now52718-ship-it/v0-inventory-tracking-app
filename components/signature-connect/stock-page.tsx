@@ -50,29 +50,51 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
 
     setLoading(true)
     try {
-      // Add to Supabase
-      const { error } = await supabase
+      // Create transaction record in Supabase
+      const transactionData = {
+        transaction_id: `TXN-${Date.now()}`,
+        serial_number: serialNumber || `AUTO-${Date.now()}`,
+        product_id: String(selectedProduct.id), // Convert to string
+        action: 'ADD_STOCK',
+        user_id: user?.id || null,
+        customer_name: supplier || 'Walk-in',
+        condition,
+        approval_status: 'approved'
+      }
+
+      console.log('Adding transaction to Supabase:', transactionData)
+      
+      const { data, error } = await supabase
         .from('transactions')
-        .insert({
-          transaction_id: `TXN-${Date.now()}`,
-          serial_number: serialNumber || `AUTO-${Date.now()}`,
-          product_id: selectedProduct.id,
-          action: 'ADD_STOCK',
-          user_id: user?.id || null,
-          customer_name: supplier,
-          condition,
-          approval_status: 'approved',
-          metadata: { quantity }
-        })
+        .insert([transactionData])
+        .select()
 
       if (error) {
-        console.error('Error adding stock to Supabase:', error)
-        // Continue with fallback
+        console.error('Supabase error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        })
+        onToast(`Supabase error: ${error.message || 'Unknown error'}`)
+        throw error
       }
+
+      console.log('Transaction created:', data)
 
       // Log the activity
       if (user?.id) {
-        await logScanQRActivity(user.id, user.username || 'Unknown', serialNumber || `AUTO-${Date.now()}`)
+        try {
+          await logScanQRActivity(
+            user.id, 
+            user.username || 'Unknown', 
+            serialNumber || `AUTO-${Date.now()}`
+          )
+        } catch (logError) {
+          console.error('Error logging activity:', logError)
+          // Don't fail if logging fails
+        }
       }
 
       // Call the submission handler
@@ -86,11 +108,11 @@ export function StockPage({ onNavigate, onSubmit, onToast }: StockPageProps) {
         timestamp: new Date().toISOString()
       })
       
-      onToast('Stock added successfully!')
+      onToast('✅ Stock added successfully!')
       onNavigate('dashboard')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding stock:', error)
-      onToast('Failed to add stock')
+      onToast(`Error: ${error?.message || 'Failed to add stock'}`)
     } finally {
       setLoading(false)
     }

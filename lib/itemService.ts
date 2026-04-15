@@ -107,25 +107,36 @@ export async function issueItem(
   customerName: string
 ): Promise<boolean> {
   try {
+    console.log('Issuing item:', { serialNumber, productId, customerName })
+
     // Create transaction record
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .insert({
+        transaction_id: `TXN-${Date.now()}`,
         serial_number: serialNumber,
         product_id: productId,
         action: 'ISSUE_ITEM',
-        user_id: userId,
+        user_id: userId || null,
         customer_name: customerName,
+        approval_status: 'approved'
       })
       .select()
-      .single();
+      .single()
 
     if (transactionError) {
-      console.error('Error creating transaction:', transactionError);
-      return false;
+      console.error('Error creating transaction:', {
+        message: transactionError.message,
+        status: transactionError.status,
+        code: transactionError.code,
+        details: transactionError.details
+      })
+      throw new Error(`Failed to create transaction: ${transactionError.message}`)
     }
 
-    // Update item status
+    console.log('Transaction created:', transaction)
+
+    // Update item status (this step is optional, may fail if item doesn't exist)
     const { error: updateError } = await supabase
       .from('items')
       .update({
@@ -133,17 +144,17 @@ export async function issueItem(
         assigned_to: customerName,
         updated_at: new Date().toISOString(),
       })
-      .eq('serial_number', serialNumber);
+      .eq('serial_number', serialNumber)
 
     if (updateError) {
-      console.error('Error updating item status:', updateError);
-      return false;
+      console.warn('Warning: Could not update item status:', updateError.message)
+      // Don't throw - transaction was created successfully
     }
 
-    return true;
+    return true
   } catch (error) {
-    console.error('Error issuing item:', error);
-    return false;
+    console.error('Error issuing item:', error)
+    throw error
   }
 }
 
@@ -155,29 +166,58 @@ export async function returnItem(
   productId: string,
   userId: string,
   userName: string,
-  condition: 'GOOD' | 'DAMAGED'
+  condition: string
 ): Promise<boolean> {
   try {
-    const newStatus = condition === 'DAMAGED' ? 'FAULTY' : 'RETURNED';
+    console.log('Returning item:', { serialNumber, productId, condition })
+
+    const newStatus = condition === 'DAMAGED' || condition === 'Faulty' ? 'FAULTY' : 'RETURNED'
 
     // Create transaction record
     const { error: transactionError } = await supabase
       .from('transactions')
       .insert({
+        transaction_id: `TXN-${Date.now()}`,
         serial_number: serialNumber,
         product_id: productId,
         action: 'RETURN_ITEM',
-        user_id: userId,
+        user_id: userId || null,
         condition: condition,
-      });
+        approval_status: 'approved'
+      })
 
     if (transactionError) {
-      console.error('Error creating return transaction:', transactionError);
-      return false;
+      console.error('Error creating return transaction:', {
+        message: transactionError.message,
+        status: transactionError.status,
+        code: transactionError.code,
+        details: transactionError.details
+      })
+      throw new Error(`Failed to create return transaction: ${transactionError.message}`)
     }
 
-    // Update item status
+    console.log('Return transaction created successfully')
+
+    // Update item status (optional)
     const { error: updateError } = await supabase
+      .from('items')
+      .update({
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('serial_number', serialNumber)
+
+    if (updateError) {
+      console.warn('Warning: Could not update item status:', updateError.message)
+      // Don't throw - transaction was created successfully
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error returning item:', error)
+    throw error
+  }
+}
       .from('items')
       .update({
         status: newStatus,
